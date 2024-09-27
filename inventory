@@ -1,0 +1,10 @@
+192.168.56.128 ansible_python_interpreter=/usr/bin/python3
+192.168.56.128 apache_package=apache2 php_package=libapache2
+
+192.168.56.129 ansible_python_interpreter=/usr/bin/python3
+192.168.56.129 apache_package=apache2 php_package=libapache2
+
+192.168.56.130 ansible_python_interpreter=/usr/bin/python3
+192.168.56.130 apache_package=httpd php_package=php
+
+

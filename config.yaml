@@ -1,0 +1,127 @@
+---
+- hosts: all
+  become: true
+  tasks:
+    
+    - name: Update package cache
+      package:
+        update_cache: yes
+
+    - name: Install Python3 and Pip3  
+      package:
+        name: "{{ item }} " 
+        state: latest
+      with_items:
+        - python3
+        - python3-pip
+
+    - name: Set pip3 as the default python for workstation
+      command: "ln -sf /usr/bin/pip3 /usr/bin/pip"
+      when: ansible_distribution == "workstation"
+
+    - name: Set pip3 as the default python for server1
+      command: "ln -sf /usr/bin/pip3 /usr/bin/pip"
+      when: ansible_distribution == "server1"
+
+    - name: Set pip3 as the default python for server2
+      command: "ln -sf /usr/bin/pip3 /usr/bin/pip"
+      when: ansible_distribution == "server2"
+
+    - name: Set python3 as the default python for workstation
+      command: "ln -sf /usr/bin/python3 /usr/bin/python"
+      when: ansible_distribution == "workstation"
+
+    - name: Set python3 as the default python for server1
+      command: "ln -sf /usr/bin/python3 /usr/bin/python"
+      when: ansible_distribution == "server1"
+
+    - name: Set python3 as the default python for server2
+      command: "ln -sf /usr/bin/python3 /usr/bin/python"
+      when: ansible_distribution == "server2"
+
+    - name: Setup MariaDB
+      hosts: mariadb_servers
+      become: yes
+      tasks:
+
+    - name: Install MariaDB
+      apt: 
+        name: mariadb-server
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Start MariaDB service
+      service:
+        name: mariadb
+        state: started
+        enabled: yes
+
+    - name: Create database
+      mysql_db:
+        name: my_database
+        state: present
+
+    - name: Create table
+      mysql_db:
+        name: my_database
+        state: present
+        collation: utf8_general_ci
+        encoding: utf8
+
+    - name: Create a table in the database
+      mysql_query:
+        login_db: my_database
+        query: >
+          CREATE TABLE IF NOT EXISTS my_table (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(255) NOT NULL
+          );
+
+    - name: Insert a record into the table
+      mysql_query:
+        login_db: my_database
+        query: >
+          INSERT INTO my_table (tamayo) VALUES ('tamayo')
+
+    - name: Open GitHub in default web browser
+      hosts: all
+      tasks:
+        - name: Create github.py script
+          copy:
+            dest: /tmp/github.py
+            content: 
+              import webbrowser
+              webbrowser.open("https://github.com")
+          mode: 0755
+
+    - name: Execute the github.py script
+      command: python3 /tmp/github.py
+      async: 1
+      poll: 0
+  
+    - name: Set up MOTD
+      hosts: all
+      become: yes
+      vars_files:
+
+    - config.yaml
+      tasks:
+
+    - name: Create MOTD file
+      copy:
+        dest: /etc/motd
+        content: "{{ motd_message | default('Ansible Managed node by ' + tamayo) }}"
+
+    - name: Create a new user
+      hosts: all
+      become: yes
+      vars_files:
+
+    - config.yaml
+      tasks:
+
+    - name: Create a user
+      user:
+        name: "{{ tamayo }}"
+        password: "{{ raylansysad2 | password_hash('sysad2') }}"
+        state: present
